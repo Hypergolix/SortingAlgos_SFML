@@ -18,10 +18,24 @@ using namespace sf;
 
 // Need counter of counter. one that counts through the numbers to be compared, one that keeps track of the sweep
 
+// Compare last dataset to new dataset, if no changes it should be done
+
+// Write some functions, LOTS of repeat code - how to pass vectors etc to functions? avoid global...
+
 int main()
 {
-	// Counter of which element 
+	// Algo 1
+	// Counter of which element - Algo 1
 	uint8_t counter = 0;
+
+	// Algo 2
+	uint32_t highNr = 0;
+	uint8_t counter2 = 0;
+
+	// Algo 3 - WORKS!
+
+	// Odd numbered elements
+	bool odd = true;
 
 	const unsigned int vWidth = 800;
 	const unsigned int vHeight = 600;
@@ -32,10 +46,17 @@ int main()
 	vector <Sprite> spriteVect;
 	//
 	uint32_t dataSet[elementCount];
+	// A way to check if its done
+	uint32_t dataSetOld[elementCount];
+
+	vector <uint32_t> dataVector;
+	vector <uint32_t> dataVectorSort;
+
 	// Generate random numbers for the data set
-	// srand(time(NULL));
+	srand(time(NULL));
 	for (uint16_t i = 0; i < elementCount; i++) {
 		dataSet[i] = rand() % 400 + 10;
+		dataVector.push_back(dataSet[i]);
 		cout << dataSet[i] << "\n";
 	}
 	cout << "FIRST^" << "\n"; // Just separate the initial print out from the rest
@@ -70,74 +91,163 @@ int main()
 	Clock clock;
 	while (window.isOpen())
 	{
-		Event event;
-		while (window.pollEvent(event))
-		{
-			if (event.type == Event::Closed)
-				window.close();
-		}
 		// here or before event?
-		clock.restart();
+
 
 		// just update the heights? instead of position, would need to change origin too though
 		// or change the positions OR order of sprites in vector and then draw that 
 
-		if (dataSet[counter] > dataSet[(counter) + 1]) {
-			// Swap Numbers, else they're already in order
-			uint32_t saveNr = dataSet[(counter) + 1];		// Store lower nr of 2nd cell
-			dataSet[counter + 1] = dataSet[counter];
-			dataSet[counter] = saveNr;
-			// Array is updated - next update visual representation (position) of the array
-			// Sprites will not be in order representative of the order of the array
-			/**/
+		// Algo 3
+		// If numbers not in order - CHECK else break
+		/**/
 
-			spriteVect[counter].setPosition(((counter + 1) * barWidth) + ((counter + 1) * 5), vHeight);
-			spriteVect[counter + 1].setPosition((counter * barWidth) + (counter * 5), vHeight);
-			
-			// Set position of get position? - this is going nowhere
-			/*
-			Vector2f spritePos = spriteVect[counter].getPosition();
-			//
-			spriteVect[counter + 1].setPosition(spriteVect[counter].getPosition());
-			spriteVect[counter].setPosition(spriteVect[counter].getPosition());
-			*/
-			// Alternative - change position as they are rendered? - wouldn't affect position
+		// counter needs to control
 
-			// Change order of sprites in Sprite vector:
+		// Do one set of compares each frame
+		if (odd) {
+			for (uint8_t i = 0; i < elementCount; i += 2) {
+				// Couldn't this be placed just for rendering timing? no way to accurately time frames then?
+				clock.restart();
+				Event event;
+				while (window.pollEvent(event))
+				{
+					if (event.type == Event::Closed)
+						window.close();
+				}
+				// If leftmost is larger than right, swap them
+				if (dataSet[i] > dataSet[i + 1]) { // or -1 to avoid out of bounds, starting for at 1
+					// Save value of rightmost cell
+					uint32_t saveNr = dataSet[i + 1];
+					// Transfer leftMost to rightMost cell
+					dataSet[i + 1] = dataSet[i];
+					// Transfer rightMost to leftMost
+					dataSet[i] = saveNr;
+					// Draw sprites in order that they appear in vector?
 
+					// divide by 2?
+
+					// Update visual positions - function?
+					spriteVect[i].setTextureRect(IntRect(0, 0, barWidth, dataSet[i]));
+					spriteVect[i].setOrigin(0, dataSet[i]);
+					spriteVect[i].setPosition((i * barWidth) + (i * 5), vHeight);
+					// 2nd
+					spriteVect[i + 1].setTextureRect(IntRect(0, 0, barWidth, dataSet[i + 1]));
+					spriteVect[i + 1].setOrigin(0, dataSet[i + 1]);
+					spriteVect[i + 1].setPosition(((i + 1) * barWidth) + ((i + 1) * 5), vHeight);
+
+					// Draw call - wont show initial now
+					window.clear();
+					for (uint16_t i = 0; i < spriteVect.size(); i++) {
+						// Change position of sprite here?
+						window.draw(spriteVect[i]);
+					}
+					window.display();
+
+					// To do work in this loop have an AND that the "computeDone" flag/bool is set
+					while (clock.getElapsedTime() < milliseconds(100)) {
+						// Kill any remaining time
+						;
+					}
+				}
+			}
 		}
+		else // Even
+		{
+			// Just leave 1st and last alone, calculate a "mask" for the middle numbers to be compared
+			for (uint8_t i = 1; i < (elementCount - 1); i++) {
+				// Couldn't this be placed just for rendering timing? no way to accurately time frames then?
+				clock.restart();
+				Event event;
+				while (window.pollEvent(event))
+				{
+					if (event.type == Event::Closed)
+						window.close();
+				}
+				if (dataSet[i] > dataSet[i + 1]) {
+					// Save value of rightmost cell
+					uint32_t saveNr = dataSet[i + 1];
+					// Transfer leftMost to rightMost cell
+					dataSet[i + 1] = dataSet[i];
+					// Transfer rightMost to leftMost
+					dataSet[i] = saveNr;
+					// Draw sprites in order that they appear in vector?
+
+					// Update visual positions - function?
+					spriteVect[i].setTextureRect(IntRect(0, 0, barWidth, dataSet[i]));
+					spriteVect[i].setOrigin(0, dataSet[i]);
+					spriteVect[i].setPosition((i * barWidth) + (i * 5), vHeight);
+					// 2nd
+					spriteVect[i + 1].setTextureRect(IntRect(0, 0, barWidth, dataSet[i + 1]));
+					spriteVect[i + 1].setOrigin(0, dataSet[i + 1]);
+					spriteVect[i + 1].setPosition(((i + 1) * barWidth) + ((i + 1) * 5), vHeight);
+
+					// Draw call
+					window.clear();
+					for (uint16_t i = 0; i < spriteVect.size(); i++) {
+						// Change position of sprite here?
+						window.draw(spriteVect[i]);
+					}
+					window.display();
+
+					// To do work in this loop have an AND that the "computeDone" flag/bool is set
+					while (clock.getElapsedTime() < milliseconds(100)) {
+						// Kill any remaining time
+						;
+					}
+				}
+
+			}
+		}
+		// Toggle odd = ~odd;
+		if (odd) {
+			odd = false;
+			// reset counter?
+		}
+		else {
+			odd = true;
+			// reset counter?
+		}
+
+		// remove cell but move its value/push_back - do other cells move over?
+
+		// push back the new highest nr and also display this by updating positions of the bars
+
+		// Increment counter etc (A2), highlight highest nr (green) and comparisons (red)
+
+
 		// Do nothing?
 
 		// repeat, could place this in the for below
 		// Separate each iteration of the data set/array
+
 		cout << "NEW" << "\n";
 		for (uint8_t i = 0; i < elementCount; i++) {
 			cout << dataSet[i] << "\n";
 		}
 
-		window.clear();
-		for (uint16_t i = 0; i < spriteVect.size(); i++) {
-			window.draw(spriteVect[i]);
-		}
-		window.display();
 
+
+		/*
+		cout << "NEW" << "\n";
+		for (uint8_t i = 0; i < dataVector.size(); i++) {
+			cout << dataVector.at(i) << "\n";
+		}
+		*/
+
+		/*
 		// If not at end of array, increment
 		// Probably better to have a "true" incremental counter and then just make a temp var with the * 2 offset
 		if (counter < (elementCount - 2)) { // (elementCount - 2) as it was trying to access out of bounds
 			counter += 2;
-		}// Break? - seems like bad practise. FIX THIS 
+		}// Break? - seems like bad practise. FIX THIS
 		else if (){
-			
+
 		}
 		else {
 			return 0;
 		}
+		*/
 
-		// To do work in this loop have an AND that the "computeDone" flag/bool is set
-		while (clock.getElapsedTime() < milliseconds(1000)) {
-			// Kill any remaining time
-			;
-		}
 	}
 
 	return 0;
